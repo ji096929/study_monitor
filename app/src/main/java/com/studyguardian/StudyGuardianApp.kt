@@ -2,7 +2,7 @@ package com.studyguardian
 
 import android.app.Application
 import com.studyguardian.data.local.UserPreferences
-import com.studyguardian.data.remote.BaasRepository
+import com.studyguardian.data.mqtt.MqttGuardianClient
 import com.studyguardian.domain.GuardianCoordinator
 
 class StudyGuardianApp : Application() {
@@ -10,7 +10,7 @@ class StudyGuardianApp : Application() {
     lateinit var preferences: UserPreferences
         private set
 
-    lateinit var baasRepository: BaasRepository
+    lateinit var mqttClient: MqttGuardianClient
         private set
 
     lateinit var coordinator: GuardianCoordinator
@@ -19,7 +19,8 @@ class StudyGuardianApp : Application() {
     override fun onCreate() {
         super.onCreate()
         preferences = UserPreferences(this)
-        baasRepository = BaasRepository(this)
-        coordinator = GuardianCoordinator(this, preferences, baasRepository)
+        coordinator = GuardianCoordinator(this, preferences)
+        mqttClient = MqttGuardianClient(this, preferences, coordinator::onPartnerMqttMessage)
+        coordinator.attachMqtt(mqttClient)
     }
 }

@@ -1,68 +1,62 @@
-# 考研星人守护 (Study & Sleep Guardian) V2.0
+# 考研星人守护 (Study & Sleep Guardian) V2.1
 
-专为情侣考研设计的 Android 极简守护与陪伴工具：**零商业收费、数据绝对隐私**，用底层系统 API 实现温柔克制的互相陪伴。
+专为情侣考研设计的 Android 极简守护工具：**零后端账号、零数据库、零 BaaS 费用**。双端通过 **MQTT 公共 Broker** 实时结伴。
 
-## 技术栈
+## 通信架构
 
-| 层级 | 选型 |
+| 项目 | 说明 |
 |------|------|
-| 客户端 | Kotlin + Jetpack Compose |
-| 后端中转 | MemFire Cloud / LeanCloud（REST，见 `BaasRepository`） |
-| 桌面组件 | Glance App Widget |
-| 守护 | Foreground Service + UsageStats + 悬浮窗 |
+| 协议 | MQTT 3.1.1 |
+| Broker | `broker.emqx.io:1883`（免费公共节点） |
+| 客户端 | [HiveMQ MQTT Client](https://github.com/hivemq/hivemq-mqtt-client) |
+| 结对方式 | 两人输入**相同**「星际频道号」→ 订阅同一 Topic |
+| 掉线检测 | **LWT（遗嘱消息）** + 15 分钟无心跳 |
+
+详细 JSON 协议见 [`docs/MQTT_PROTOCOL.md`](docs/MQTT_PROTOCOL.md)。
 
 ## 快速开始
 
-1. 用 **Android Studio Ladybug+** 打开本目录。
-2. 在 [MemFire](https://memfiredb.com/) 或 [LeanCloud](https://www.leancloud.cn/) 创建应用，建表见 [`docs/BAAS_SCHEMA.md`](docs/BAAS_SCHEMA.md)。
-3. 在 `app/build.gradle.kts` 的 `defaultConfig` 中填写：
+1. Android Studio 打开本目录，同步 Gradle。
+2. 两台真机安装 APK（Android 8.0+）。
+3. 约定一个复杂频道名（如 `Xingqiu_2026_LOVE`），**两台手机输入完全相同**。
+4. 开启：使用情况访问、悬浮窗、电池白名单。
 
-```kotlin
-buildConfigField("String", "BAAS_APP_ID", "\"你的 AppId\"")
-buildConfigField("String", "BAAS_APP_KEY", "\"你的 AppKey\"")
-buildConfigField("String", "BAAS_SERVER_URL", "\"https://xxx.api.lncldglobal.com\"")
-```
-
-4. 真机安装（需 Android 8.0+），按引导开启：**使用情况访问、悬浮窗、电池白名单**。
+无需注册、无需 LeanCloud/MemFire、无需 AppKey。
 
 ## 功能对照
 
-| 模块 | 实现位置 |
-|------|----------|
-| 6 位邀请码结对 | `OnboardingScreen` + `InviteCodeGenerator` |
-| 专注 / 摸鱼检测 | `UsageMonitor` + `StudyWhitelist` |
-| 爱心戳戳霸屏 | `OverlayService` + `HapticHelper` |
-| 睡眠判定（充电+熄屏） | `SleepMonitor` |
-| 晚安遮罩 & 撒娇延时 | `OverlayService` + `SleepDelayHandler` |
-| 心疼机制（3 分钟无回应） | `SleepDelayHandler` |
-| 15 分钟离线灰显 | `BaasRepository.fetchPartnerStatus` + Widget |
-| 临时豁免 3 分钟 | 霸屏「临时豁免」按钮 |
-| 前台保活 | `GuardianForegroundService` |
+| 功能 | 实现 |
+|------|------|
+| 频道结对 | `OnboardingScreen` + `ChannelValidator` |
+| 状态广播 | `MqttGuardianClient.publishStatus` ← `GuardianForegroundService` |
+| 戳一下 / 延时 | MQTT `poke` / `request_delay` / `approve_delay` |
+| 意外离线 | 连接时配置 LWT → `type: offline` |
+| 15 分钟失联 | `startStalePartnerWatch` |
+| 桌面组件 | `GuardianWidget`（读 MQTT 状态或本地缓存） |
 
 ## 项目结构
 
 ```
 app/src/main/java/com/studyguardian/
-├── data/          # DataStore、BaaS、模型
-├── domain/        # 白名单、结对、协调器
-├── monitor/       # 使用统计 & 睡眠
-├── service/       # 前台服务 & 悬浮窗
-├── ui/            # Compose 界面 & 主题
-├── widget/        # 桌面小组件
-└── util/          # 通知、震动、权限
+├── data/mqtt/       # MqttGuardianClient、JSON 载荷
+├── data/local/      # DataStore（频道号、device_id）
+├── domain/          # 协调器、频道校验、睡眠延时
+├── service/         # 前台守护、悬浮窗
+└── ui/              # Compose 界面
 ```
 
-## 隐私说明
+## 隐私与安全提示
 
-- 仅上报：`uid`、`partner_uid`、`current_state`、`last_update_time` 及交互指令。
-- 不采集聊天、相册、通讯录；白名单可自行在 `StudyWhitelist.kt` 调整。
+- 公共 Broker **不加密**（1883 明文），频道号务必足够复杂、仅两人知晓。
+- 任何人猜到频道名即可订阅，请勿使用生日、手机号等弱口令。
+- 若需更高安全性，可自建 Mosquitto 并改用 TLS（8883）。
 
-## 后续可增强
+## 已从 V2.0 移除
 
-- LeanCloud / MemFire **Live Query** 替代 8 秒轮询
-- 设置页自定义就寝时间、白名单
-- 双方对称的「同意延时」推送 Action
+- LeanCloud / MemFire 及全部 REST/SDK
+- `Users` / `Interactions` 表与用户注册体系
+- 6 位邀请码单向绑定逻辑
 
 ---
 
-Made with 💕 for 考研情侣 — 互相守护，不互相施压。
+Made with 💕 — 无服务器，只有你们的专属频道。

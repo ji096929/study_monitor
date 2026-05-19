@@ -53,7 +53,7 @@ fun HomeScreen(
     ) {
         Text("考研星人守护", style = MaterialTheme.typography.headlineLarge)
         Text(
-            "你们的状态完全对称，互相扶持不查岗～",
+            "频道：${state.channel} · ${if (state.mqttConnected) "MQTT 已连接" else "连接中…"}",
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -99,9 +99,9 @@ fun HomeScreen(
             Column {
                 Text("温柔提醒", style = MaterialTheme.typography.titleLarge)
                 Spacer(Modifier.height(8.dp))
+                Text("• 状态经 MQTT 实时广播，无云端数据库")
                 Text("• 非白名单 App → 对方收到「偷偷冲浪」推送")
-                Text("• 就寝亮屏 → 晚安遮罩 + 可撒娇延时")
-                Text("• 15 分钟无心跳 → 组件变灰，避免误判")
+                Text("• 断网/杀进程 → 遗嘱消息通知离线")
             }
         }
     }

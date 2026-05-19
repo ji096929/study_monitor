@@ -12,17 +12,12 @@ android {
         applicationId = "com.studyguardian"
         minSdk = 26
         targetSdk = 35
-        versionCode = 2
-        versionName = "2.0.0"
-
-        buildConfigField("String", "BAAS_APP_ID", "\"\"")
-        buildConfigField("String", "BAAS_APP_KEY", "\"\"")
-        buildConfigField("String", "BAAS_SERVER_URL", "\"https://your-memfire-or-leancloud-host\"")
+        versionCode = 3
+        versionName = "2.1.0-mqtt"
     }
 
     buildFeatures {
         compose = true
-        buildConfig = true
     }
 
     compileOptions {
@@ -54,11 +49,9 @@ dependencies {
     implementation("androidx.datastore:datastore-preferences:1.1.1")
     implementation("androidx.glance:glance-appwidget:1.1.1")
     implementation("androidx.glance:glance-material3:1.1.1")
-    implementation("androidx.work:work-runtime-ktx:2.10.0")
 
-    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation("com.hivemq:hivemq-mqtt-client:1.3.3")
     implementation("com.squareup.moshi:moshi-kotlin:1.15.1")
-    implementation("com.squareup.moshi:moshi-adapters:1.15.1")
 
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")

@@ -31,6 +31,7 @@ class MainActivity : ComponentActivity() {
         lifecycleScope.launch {
             val app = application as StudyGuardianApp
             if (app.preferences.onboardedFlow.first()) {
+                app.mqttClient.connectIfNeeded()
                 app.coordinator.startGuardianServices()
             }
         }
@@ -54,14 +55,10 @@ class MainActivity : ComponentActivity() {
                                 },
                             )
                         }
-                        !state.onboarded -> {
+                        !state.onboarded || state.channel.isBlank() -> {
                             OnboardingScreen(
                                 state = state,
-                                onBind = vm::bindPartner,
-                                onContinueSolo = {
-                                    vm.skipPartnerForNow()
-                                    showPermissions = true
-                                },
+                                onJoinChannel = vm::joinChannel,
                             )
                         }
                         else -> {
@@ -77,5 +74,4 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-
 }

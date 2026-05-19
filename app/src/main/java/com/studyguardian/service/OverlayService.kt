@@ -44,7 +44,6 @@ import com.studyguardian.ui.theme.StudyGuardianTheme
 import com.studyguardian.util.HapticHelper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 class OverlayService : android.app.Service(), LifecycleOwner, SavedStateRegistryOwner {
@@ -142,10 +141,8 @@ class OverlayService : android.app.Service(), LifecycleOwner, SavedStateRegistry
                         onRequestDelay = {
                             val app = application as StudyGuardianApp
                             CoroutineScope(Dispatchers.Main).launch {
-                                val uid = app.preferences.uidFlow.first() ?: return@launch
-                                val partner = app.preferences.partnerUidFlow.first() ?: return@launch
-                                SleepDelayHandler(app.preferences, app.baasRepository)
-                                    .requestWithAutoFallback(this@OverlayService, uid, partner)
+                                SleepDelayHandler(app.preferences, app.mqttClient)
+                                    .requestWithAutoFallback(this@OverlayService)
                             }
                             removeOverlay()
                             stopSelf()

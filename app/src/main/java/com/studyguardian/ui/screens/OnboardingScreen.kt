@@ -28,10 +28,9 @@ import com.studyguardian.ui.components.GlassCard
 @Composable
 fun OnboardingScreen(
     state: GuardianUiState,
-    onBind: (String) -> Unit,
-    onContinueSolo: () -> Unit,
+    onJoinChannel: (String) -> Unit,
 ) {
-    var inputCode by rememberSaveable { mutableStateOf("") }
+    var channelInput by rememberSaveable { mutableStateOf(state.channel) }
 
     Column(
         modifier = Modifier
@@ -43,7 +42,7 @@ fun OnboardingScreen(
         Text("✨ 考研星人守护", style = MaterialTheme.typography.headlineLarge)
         Spacer(Modifier.height(8.dp))
         Text(
-            "灵魂结对 · 双向平等陪伴",
+            "零后端 · MQTT 实时结伴",
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
@@ -52,18 +51,18 @@ fun OnboardingScreen(
 
         GlassCard(modifier = Modifier.fillMaxWidth(), breathing = true) {
             Column {
-                Text("你的星际坐标", style = MaterialTheme.typography.titleLarge)
+                Text("星际频道号", style = MaterialTheme.typography.titleLarge)
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    state.inviteCode.ifBlank { "······" },
-                    style = MaterialTheme.typography.headlineLarge,
-                    color = MaterialTheme.colorScheme.primary,
-                )
-                Spacer(Modifier.height(4.dp))
-                Text(
-                    "发给 TA，或输入对方的坐标完成绑定",
+                    "两人约定同一个复杂频道名，即可双向实时通信。无需注册、无需数据库。",
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    "示例：Xingqiu_2026_LOVE（8–64 位，字母数字 _ -）",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary,
                 )
             }
         }
@@ -71,11 +70,11 @@ fun OnboardingScreen(
         Spacer(Modifier.height(24.dp))
 
         OutlinedTextField(
-            value = inputCode,
-            onValueChange = { if (it.length <= 6 && it.all { c -> c.isDigit() }) inputCode = it },
+            value = channelInput,
+            onValueChange = { if (it.length <= 64) channelInput = it },
             modifier = Modifier.fillMaxWidth(),
-            label = { Text("输入 TA 的 6 位坐标") },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            label = { Text("输入你们的专属频道号") },
+            placeholder = { Text("与 TA 输入完全相同") },
             singleLine = true,
             shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp),
         )
@@ -87,18 +86,15 @@ fun OnboardingScreen(
 
         Spacer(Modifier.height(16.dp))
         GlassButton(
-            onClick = { onBind(inputCode) },
+            onClick = { onJoinChannel(channelInput) },
             modifier = Modifier.fillMaxWidth(),
         ) {
-            Text("完成结对", modifier = Modifier.padding(vertical = 4.dp))
+            Text("进入频道并开始守护", modifier = Modifier.padding(vertical = 4.dp))
         }
-        Spacer(Modifier.height(8.dp))
-        GlassButton(
-            onClick = onContinueSolo,
-            modifier = Modifier.fillMaxWidth(),
-            containerColor = MaterialTheme.colorScheme.surfaceVariant,
-        ) {
-            Text("先自己逛逛", modifier = Modifier.padding(vertical = 4.dp))
+
+        if (state.mqttConnected) {
+            Spacer(Modifier.height(12.dp))
+            Text("已连接公共节点 broker.emqx.io 🛰️", color = MaterialTheme.colorScheme.primary)
         }
     }
 }

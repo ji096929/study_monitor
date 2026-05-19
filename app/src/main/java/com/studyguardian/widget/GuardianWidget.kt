@@ -19,10 +19,9 @@ import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
+import com.studyguardian.StudyGuardianApp
 import com.studyguardian.data.model.UserState
-import com.studyguardian.data.remote.BaasRepository
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 
 class GuardianWidget : GlanceAppWidget() {
@@ -47,13 +46,12 @@ data class WidgetStatus(
 
 object WidgetStatusLoader {
     suspend fun load(context: Context): WidgetStatus {
-        val app = context.applicationContext as com.studyguardian.StudyGuardianApp
-        val partner = app.preferences.partnerUidFlow.first()
-        if (partner == null) {
-            return WidgetStatus("💫", "等待结对...", Color(0xFFF5EBE0))
+        val app = context.applicationContext as StudyGuardianApp
+        val live = app.mqttClient.partnerStatus.value
+        val status = live ?: app.preferences.readCachedPartnerStatus()
+        if (status == null) {
+            return WidgetStatus("💫", "等待进入星际频道…", Color(0xFFF5EBE0))
         }
-        val status = BaasRepository(context).fetchPartnerStatus(partner)
-            ?: return WidgetStatus("📡", "星人信号丢失中", Color(0xFFB0BEC5))
         val bg = when {
             status.isSignalLost -> Color(0xFFB0BEC5)
             status.state == UserState.STUDY -> Color(0xFF9FD8B7)
