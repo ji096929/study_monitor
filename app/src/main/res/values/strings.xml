@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">考研星人守护</string>
+    <string name="widget_name">星人状态</string>
+    <string name="notification_channel_name">守护陪伴</string>
+    <string name="notification_title">考研星人正在默默守护</string>
+    <string name="notification_text">温柔陪伴中，不打扰你的专注～</string>
+</resources>
